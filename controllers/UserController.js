@@ -60,12 +60,13 @@ module.exports = class UserController {
 
         try {
             const newUser = await user.save();
-            res.status(200).json({
+            res.status(201).json({
                 message: 'Usuário cadastrado com sucesso!',
                 newUser,
             })
         } catch (error) {
-            res.status(500).json({ message: error });
+            console.log(error);
+            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde! " });
         }
     }
 }
