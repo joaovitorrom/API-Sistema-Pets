@@ -64,7 +64,46 @@ module.exports = class UserController {
             await createUserToken(newUser, req, res);
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde! " });
+            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde!" });
         }
     }
+
+     static async login(req,res) {
+        const { email, password } = req.body;
+
+        if(!email) {
+            res.status(422).json({ message: 'O email é obrigatório!'});
+            return;
+        }
+
+        if(!email.includes('@') || !email.includes('.')) {
+            res.status(422).json({ message: 'Email inválido! Tente outro.'});
+            return;
+        }
+
+         if(!password) {
+            res.status(422).json({ message: 'A senha é obrigatória!'});
+            return;
+        }
+
+        // Verifica se o usuário existe no sistema
+        const user = await User.findOne({ email: email });
+
+        if(!user) {
+            res.status(422).json({ message: 'Não há usuário cadastrado com este e-mail!' });
+            return;
+        }
+
+        // Verifica se a senha é a mesma que está cadastrada no db
+        const checkPassword = await bcrypt.compare(password, user.password);
+
+        if(!checkPassword) {
+            res.status(422).json({
+                message: 'Senha inválida'
+            })
+            return;
+        }
+
+        await createUserToken(user, req, res);
+     }
 }
