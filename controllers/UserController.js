@@ -73,7 +73,7 @@ module.exports = class UserController {
         }
     }
 
-     static async login(req,res) {
+    static async login(req,res) {
         const { email, password } = req.body;
 
         if(!email) {
@@ -110,7 +110,7 @@ module.exports = class UserController {
         await createUserToken(user, req, res);
      }
 
-     static async checkUser(req, res) {
+    static async checkUser(req, res) {
         let currentUser;
 
         if(req.headers.authorization) {
@@ -126,27 +126,27 @@ module.exports = class UserController {
         res.status(200).send(currentUser);
      }
 
-     static async getUserById(req, res) {
+    static async getUserById(req, res) {
         const { id } = req.params;
 
         const user = await User.findById(id).select('-password');
 
         if(!user) {
-            res.status(422).json({ message: 'Usuário não encontrado!' })
+            res.status(404).json({ message: 'Usuário não encontrado!' })
             return;
         }
 
         res.status(200).send(user);
      }
 
-     static async editUser(req, res) {
+    static async editUser(req, res) {
         const { id } = req.params;
 
         // Verifica se o usuário existe pelo id
         const user = await User.findById(id);
 
         if(!user) {
-            res.status(422).json({ message: 'Usuário não encontrado!' });
+            res.status(404).json({ message: 'Usuário não encontrado!' });
             return;
         }
 
@@ -210,5 +210,26 @@ module.exports = class UserController {
             res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
             return;
         }
-     }
+    }
+
+    static async deleteUser(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o usuário existe pelo id
+        const user = await User.findById(id);
+
+        if(!user) {
+            res.status(404).json({ message: 'Usuário não encontrado!' });
+            return;
+        }
+
+        try {
+            await User.deleteOne({ _id: id });
+            res.status(200).json({ message: "Usuário removido com sucesso."});
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
+            return;
+        }
+    }
 }
