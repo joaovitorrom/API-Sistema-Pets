@@ -11,44 +11,44 @@ module.exports = class UserController {
         const { name, email, phone,  password, confirmpassword } = req.body;
 
         if(!name) {
-            res.status(422).json({ message: 'O nome é obrigatório!'});
+            res.status(422).json({ message: 'O nome é obrigatório!' });
             return;
         }
 
         if(!email) {
-            res.status(422).json({ message: 'O email é obrigatório!'});
+            res.status(422).json({ message: 'O email é obrigatório!' });
             return;
         }
 
         if(!email.includes('@') || !email.includes('.')) {
-            res.status(422).json({ message: 'Email inválido! Tente outro.'});
+            res.status(422).json({ message: 'Email inválido! Tente outro.' });
             return;
         }
 
         if(!phone) {
-            res.status(422).json({ message: 'O número de contato é obrigatório!'});
+            res.status(422).json({ message: 'O número de contato é obrigatório!' });
             return;
         }
 
         if(!password) {
-            res.status(422).json({ message: 'A senha é obrigatória!'});
+            res.status(422).json({ message: 'A senha é obrigatória!' });
             return;
         }
 
         if(!confirmpassword) {
-            res.status(422).json({ message: 'A confirmação de senha é obrigatória!'});
+            res.status(422).json({ message: 'A confirmação de senha é obrigatória!' });
             return;
         }
 
         if(password !== confirmpassword) {
-            res.status(422).json({ message: 'A senha e a confirmação de senha precisam ser iguais!'});
+            res.status(422).json({ message: 'As senhas não conferem!' });
         }
 
         // Verifica se o e-mail já foi cadastrado 
         const userExists = await User.findOne({ email: email });
 
         if(userExists) {
-            res.status(422).json({ message: 'E-mail já cadastrado, utilize outro.' });
+            res.status(422).json({ message: 'E-mail já cadastrado! Utilize outro.' });
             return;
         }
 
@@ -68,7 +68,8 @@ module.exports = class UserController {
             await createUserToken(newUser, req, res);
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde!" });
+            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
+            return;
         }
     }
 
@@ -94,7 +95,7 @@ module.exports = class UserController {
         const user = await User.findOne({ email: email });
 
         if(!user) {
-            res.status(422).json({ message: 'Não há usuário cadastrado com este e-mail!' });
+            res.status(422).json({ message: 'Não há usuário cadastrado com este e-mail.' });
             return;
         }
 
@@ -102,7 +103,7 @@ module.exports = class UserController {
         const checkPassword = await bcrypt.compare(password, user.password);
 
         if(!checkPassword) {
-            res.status(422).json({ message: 'Senha inválida' });
+            res.status(422).json({ message: 'Senha inválida!' });
             return;
         }
 
@@ -136,5 +137,78 @@ module.exports = class UserController {
         }
 
         res.status(200).send(user);
+     }
+
+     static async editUser(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o usuário existe pelo id
+        const user = await User.findById(id);
+
+        if(!user) {
+            res.status(422).json({ message: 'Usuário não encontrado!' });
+            return;
+        }
+
+        const { name, email, phone, password, confirmpassword } = req.body;
+
+        // Validações
+         if(!name) {
+            res.status(422).json({ message: 'O nome é obrigatório!'});
+            return;
+        }
+
+        if(!email) {
+            res.status(422).json({ message: 'O email é obrigatório!'});
+            return;
+        }
+
+        if(!email.includes('@') || !email.includes('.')) {
+            res.status(422).json({ message: 'Email inválido! Tente outro.'});
+            return;
+        }
+
+        // Verifica se o e-mail já está em uso por outro usuário
+        const userExists = await User.findOne({ email: email });
+
+        if(user.email !== email && userExists) {
+            res.status(422).json({ message: 'Email inválido! Tente outro.' });
+            return;
+        }
+        user.email = email;
+
+        if(!phone) {
+            res.status(422).json({ message: 'O número de contato é obrigatório!'});
+            return;
+        }
+        user.phone = phone;
+
+        if(password !== confirmpassword) {
+            res.status(422).json({ message: 'As senhas não conferem!' });
+            return;
+        } else if(password === confirmpassword && password != null) {
+            // Cria uma nova senha
+            const salt = await bcrypt.genSalt(12);
+            const passwordHash = await bcrypt.hash(password, salt);
+
+            user.password = passwordHash;
+        }
+
+        try {
+            const updateUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $set: user },
+                { new: true }
+            )
+            
+            res.status(200).json({
+                message: 'Usuário atualizado com sucesso!',
+                data: updateUser
+            })
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
+            return;
+        }
      }
 }
