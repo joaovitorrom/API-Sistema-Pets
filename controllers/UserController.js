@@ -102,9 +102,7 @@ module.exports = class UserController {
         const checkPassword = await bcrypt.compare(password, user.password);
 
         if(!checkPassword) {
-            res.status(422).json({
-                message: 'Senha inválida'
-            })
+            res.status(422).json({ message: 'Senha inválida' });
             return;
         }
 
@@ -125,5 +123,18 @@ module.exports = class UserController {
         }
 
         res.status(200).send(currentUser);
+     }
+
+     static async getUserById(req, res) {
+        const { id } = req.params;
+
+        const user = await User.findById(id).select('-password');
+
+        if(!user) {
+            res.status(422).json({ message: 'Usuário não encontrado!' })
+            return;
+        }
+
+        res.status(200).send(user);
      }
 }
