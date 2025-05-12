@@ -3,12 +3,14 @@ const express = require('express');
 const connectToDatabase = require('./config/db');
 const app = express();
 const UserRoutes = require('./routes/UserRoutes');
+const PetRoutes = require('./routes/PetRoutes');
 
 // Middleware
 app.use(express.json());
 
 // Routes
 app.use('/users', UserRoutes);
+app.use('/pets', PetRoutes);
 
 // Inicialização do servidor após conectar ao bd
 connectToDatabase()
