@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // Helpers
 const getToken = require('../helpers/get-token');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 module.exports = class PetController {
 
@@ -74,5 +75,23 @@ module.exports = class PetController {
         const pets = await Pet.find({ 'decoded_id': decoded.id}).sort('-createdAt');
 
         res.status(200).json({ pets });
+    }
+
+    static async getPetById(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
+        // Verifica se o Pet foi cadastrado
+        const pet = await Pet.findOne({ _id: id });
+        if(!pet) {
+            res.status(404).json({ message: 'Pet não encontrado!' });
+        }
+
+        res.status(200).json({ pet: pet });
     }
 }
