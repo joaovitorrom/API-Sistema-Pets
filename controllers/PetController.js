@@ -57,4 +57,11 @@ module.exports = class PetController {
             return;
         }
     }
+
+    // Busca todos os pets cadastrados no sistema
+    static async getAll(req, res) {
+        const pets = await Pet.find().sort('-createdAt');
+
+        res.status(200).json({ pets: pets });
+    }
 }
