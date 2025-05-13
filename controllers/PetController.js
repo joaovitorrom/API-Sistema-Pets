@@ -64,4 +64,15 @@ module.exports = class PetController {
 
         res.status(200).json({ pets: pets });
     }
+
+    // Busca todos os pets de um usuário
+    static async getAllUserPets(req, res) {
+        // Busca usuário pelo token
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        const pets = await Pet.find({ 'decoded_id': decoded.id}).sort('-createdAt');
+
+        res.status(200).json({ pets });
+    }
 }
