@@ -5,9 +5,10 @@ const jwt = require('jsonwebtoken');
 // Helpers
 const createUserToken = require('../helpers/create-user-token');
 const getToken = require('../helpers/get-token');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 module.exports = class UserController {
-    static async register(req,res) {
+    static async register(req, res) {
         const { name, email, phone,  password, confirmpassword } = req.body;
 
         if(!name) {
@@ -73,7 +74,7 @@ module.exports = class UserController {
         }
     }
 
-    static async login(req,res) {
+    static async login(req, res) {
         const { email, password } = req.body;
 
         if(!email) {
@@ -129,6 +130,12 @@ module.exports = class UserController {
     static async getUserById(req, res) {
         const { id } = req.params;
 
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
         const user = await User.findById(id).select('-password');
 
         if(!user) {
@@ -141,6 +148,12 @@ module.exports = class UserController {
 
     static async editUser(req, res) {
         const { id } = req.params;
+        
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
 
         // Verifica se o usuário existe pelo id
         const user = await User.findById(id);
@@ -214,6 +227,12 @@ module.exports = class UserController {
 
     static async deleteUser(req, res) {
         const { id } = req.params;
+        
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
 
         // Verifica se o usuário existe pelo id
         const user = await User.findById(id);
