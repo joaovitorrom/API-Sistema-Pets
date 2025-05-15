@@ -72,7 +72,7 @@ module.exports = class PetController {
         const token = getToken(req);
         const decoded = jwt.verify(token, process.env.SECRET);
 
-        const pets = await Pet.find({ 'decoded_id': decoded.id}).sort('-createdAt');
+        const pets = await Pet.find({ 'user._id': decoded.id}).sort('-createdAt');
 
         res.status(200).json({ pets });
     }
