@@ -157,7 +157,6 @@ module.exports = class UserController {
 
         // Verifica se o usuário existe pelo id
         const user = await User.findById(id);
-
         if(!user) {
             res.status(404).json({ message: 'Usuário não encontrado!' });
             return;
@@ -170,6 +169,7 @@ module.exports = class UserController {
             res.status(422).json({ message: 'O nome é obrigatório!'});
             return;
         }
+        user.name = name;
 
         if(!email) {
             res.status(422).json({ message: 'O email é obrigatório!'});
@@ -183,7 +183,6 @@ module.exports = class UserController {
 
         // Verifica se o e-mail já está em uso por outro usuário
         const userExists = await User.findOne({ email: email });
-
         if(user.email !== email && userExists) {
             res.status(422).json({ message: 'Email inválido! Tente outro.' });
             return;
@@ -205,6 +204,15 @@ module.exports = class UserController {
             const passwordHash = await bcrypt.hash(password, salt);
 
             user.password = passwordHash;
+        }
+
+        // Verifica se o usuário logado possui o mesmo id que será atualizado
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(user._id.toString() !== decoded.id.toString()) {
+            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            return;
         }
 
         try {
@@ -236,9 +244,17 @@ module.exports = class UserController {
 
         // Verifica se o usuário existe pelo id
         const user = await User.findById(id);
-
         if(!user) {
             res.status(404).json({ message: 'Usuário não encontrado!' });
+            return;
+        }
+
+        // Verifica se o usuário logado possui o mesmo id que será removido
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(user._id.toString() !== decoded.id.toString()) {
+            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
             return;
         }
 
