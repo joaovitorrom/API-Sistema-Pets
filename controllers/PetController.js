@@ -149,7 +149,7 @@ module.exports = class PetController {
         const token = getToken(req);
         const decoded = jwt.verify(token, process.env.SECRET);
 
-        if(pet.user._id !== decoded.id) {
+        if(pet.user._id.toString() !== decoded.id.toString()) {
             res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
             return;
         }
@@ -207,7 +207,7 @@ module.exports = class PetController {
         const token = getToken(req);
         const decoded = jwt.verify(token, process.env.SECRET);
 
-        if(pet.user._id === decoded.id) {
+        if(pet.user._id.toString() === decoded.id.toString()) {
             res.status(422).json({ message: 'Você não pode agendar uma visita com o seu próprio Pet!' });
             return;
         }
@@ -256,7 +256,7 @@ module.exports = class PetController {
         const token = getToken(req);
         const decoded = jwt.verify(token, process.env.SECRET);
 
-        if(pet.user._id !== decoded.id) {
+        if(pet.user._id.toString() !== decoded.id.toString()) {
             res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
             return;
         }
