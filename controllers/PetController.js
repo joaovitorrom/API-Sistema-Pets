@@ -90,8 +90,38 @@ module.exports = class PetController {
         const pet = await Pet.findOne({ _id: id });
         if(!pet) {
             res.status(404).json({ message: 'Pet não encontrado!' });
+            return;
         }
 
         res.status(200).json({ pet: pet });
+    }
+
+    static async removePetById(req, res) {
+        const { id } = req.params;
+
+         // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
+        // Verifica se o Pet foi cadastrado
+        const pet = await Pet.findOne({ _id: id });
+        if(!pet) {
+            res.status(404).json({ message: 'Pet não encontrado!' });
+            return;
+        }
+
+        // Verifica se o usuário logado cadastrou o pet
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(pet.user._id.toString() !== decoded.id.toString()) {
+            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            return;
+        }
+
+        await Pet.findByIdAndRemove(id);
+        res.status(200).json({ message: 'Pet removido com sucesso!' });
     }
 }
