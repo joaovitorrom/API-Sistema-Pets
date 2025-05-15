@@ -99,7 +99,7 @@ module.exports = class PetController {
     static async removePetById(req, res) {
         const { id } = req.params;
 
-         // Verifica se o id é válido
+        // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
             res.status(422).json({ message: 'ID Inválido!' });
             return;
@@ -123,5 +123,64 @@ module.exports = class PetController {
 
         await Pet.findByIdAndRemove(id);
         res.status(200).json({ message: 'Pet removido com sucesso!' });
+    }
+
+    static async updatePet(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
+        const { name, age, weight, color, available } = req.body;
+     
+        const updatedData = {};
+
+        // Verifica se o Pet foi cadastrado
+        const pet = await Pet.findOne({ _id: id });
+        if(!pet) {
+            res.status(404).json({ message: 'Pet não encontrado!' });
+            return;
+        }
+
+        // Verifica se o usuário logado cadastrou o pet
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(pet.user._id.toString() !== decoded.id.toString()) {
+            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            return;
+        }
+
+        if(!name) {
+            res.status(422).json({ message: "O nome é obrigatório!" });
+        } else {
+            updatedData.name = name;
+        }
+
+        if(!age) {
+            res.status(422).json({ message: "A idade é obrigatória!" });
+        } else {
+            updatedData.age = age;
+        }
+
+        if(!weight) {
+            res.status(422).json({ message: "O peso é obrigatório!" });
+        } else {
+            updatedData.weight = weight;
+        }
+
+        if(!color) {
+            res.status(422).json({ message: "A cor é obrigatória!" });
+        } else {
+            updatedData.color = color;
+        }
+
+        updatedData.available = available;
+        
+        await Pet.findByIdAndUpdate(id, updatedData);
+        res.status(200).json({ message: 'Pet atualizado com sucesso!' });
     }
 }

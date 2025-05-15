@@ -9,5 +9,6 @@ router.get('/', PetController.getAll);
 router.get('/mypets', verifyToken, PetController.getAllUserPets);
 router.get('/:id', PetController.getPetById);
 router.delete('/:id', PetController.removePetById);
+router.patch('/:id', verifyToken, PetController.updatePet);
 
 module.exports = router;
