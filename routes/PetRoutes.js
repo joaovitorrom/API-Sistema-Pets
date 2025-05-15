@@ -11,5 +11,6 @@ router.get('/:id', PetController.getPetById);
 router.delete('/:id', PetController.removePetById);
 router.patch('/:id', verifyToken, PetController.updatePet);
 router.patch('/schedule/:id', verifyToken, PetController.schedule);
+router.patch('/conclude/:id', verifyToken, PetController.concludeAdoption);
 
 module.exports = router;

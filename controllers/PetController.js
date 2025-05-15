@@ -214,20 +214,58 @@ module.exports = class PetController {
 
         // Verifica se o usuário já agendou uma visita
         if(pet.adopter) {
-            if(pet.adopter._id === decoded._id) {
+            if(pet.adopter._id === decoded.id && pet.available === true) {
                 res.status(422).json({ message: 'Você já agendou uma visita para este Pet!' });
                 return;
             }
         }
 
+        // Verifica se o pet está disponível para adoção
+        if(pet.available === false){
+            res.status(422).json({ message: 'Esse Pet não está disponível para adoção no momento.' });
+            return;
+        }
+
         // Adiciona usuário como adotante do pet
         pet.adopter = {
-            _id: decoded._id,
+            _id: decoded.id,
             name: decoded.name
         }
 
         await Pet.findByIdAndUpdate(id, pet);
-
         res.status(200).json({ message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}` });
+    }
+
+    static async concludeAdoption(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
+        // Verifica se o Pet foi cadastrado
+        const pet = await Pet.findOne({ _id: id });
+        if(!pet) {
+            res.status(404).json({ message: 'Pet não encontrado!' });
+            return;
+        }
+
+        // Verifica se o usuário logado cadastrou o pet
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(pet.user._id !== decoded.id) {
+            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            return;
+        }
+
+        pet.available = false;
+
+        await Pet.findByIdAndUpdate(id, pet);
+        res.status(200).json({
+            message: 'Parabéns! O ciclo de adoção foi finalizado com sucesso!'
+        })
     }
 }
