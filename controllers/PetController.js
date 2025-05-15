@@ -180,7 +180,10 @@ module.exports = class PetController {
 
         updatedData.available = available;
         
-        await Pet.findByIdAndUpdate(id, updatedData);
-        res.status(200).json({ message: 'Pet atualizado com sucesso!' });
+        const updatedPet = await Pet.findByIdAndUpdate(id, updatedData);
+        res.status(200).json({
+            message: 'Pet atualizado com sucesso!',
+            data: updatedPet
+        });
     }
 }

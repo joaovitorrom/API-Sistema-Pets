@@ -208,7 +208,7 @@ module.exports = class UserController {
         }
 
         try {
-            const updateUser = await User.findOneAndUpdate(
+            const updatedUser = await User.findOneAndUpdate(
                 { _id: user._id },
                 { $set: user },
                 { new: true }
@@ -216,7 +216,7 @@ module.exports = class UserController {
             
             res.status(200).json({
                 message: 'Usuário atualizado com sucesso!',
-                data: updateUser
+                data: updatedUser
             })
         } catch (error) {
             console.log(error);
