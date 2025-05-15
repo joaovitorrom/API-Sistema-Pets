@@ -149,7 +149,7 @@ module.exports = class PetController {
         const token = getToken(req);
         const decoded = jwt.verify(token, process.env.SECRET);
 
-        if(pet.user._id.toString() !== decoded.id.toString()) {
+        if(pet.user._id !== decoded.id) {
             res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
             return;
         }
@@ -180,10 +180,54 @@ module.exports = class PetController {
 
         updatedData.available = available;
         
-        const updatedPet = await Pet.findByIdAndUpdate(id, updatedData);
+        await Pet.findByIdAndUpdate(id, updatedData);
         res.status(200).json({
             message: 'Pet atualizado com sucesso!',
-            data: updatedPet
+            data: updatedData
         });
+    }
+
+    static async schedule(req, res) {
+        const { id } = req.params;
+
+        // Verifica se o id é válido
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({ message: 'ID Inválido!' });
+            return;
+        }
+
+         // Verifica se o Pet foi cadastrado
+        const pet = await Pet.findOne({ _id: id });
+        if(!pet) {
+            res.status(404).json({ message: 'Pet não encontrado!' });
+            return;
+        }
+
+        // Verifica se o usuário logado cadastrou o pet
+        const token = getToken(req);
+        const decoded = jwt.verify(token, process.env.SECRET);
+
+        if(pet.user._id === decoded.id) {
+            res.status(422).json({ message: 'Você não pode agendar uma visita com o seu próprio Pet!' });
+            return;
+        }
+
+        // Verifica se o usuário já agendou uma visita
+        if(pet.adopter) {
+            if(pet.adopter._id === decoded._id) {
+                res.status(422).json({ message: 'Você já agendou uma visita para este Pet!' });
+                return;
+            }
+        }
+
+        // Adiciona usuário como adotante do pet
+        pet.adopter = {
+            _id: decoded._id,
+            name: decoded.name
+        }
+
+        await Pet.findByIdAndUpdate(id, pet);
+
+        res.status(200).json({ message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}` });
     }
 }
