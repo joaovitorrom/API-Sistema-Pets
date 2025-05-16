@@ -50,7 +50,7 @@ module.exports = class UserController {
         const userExists = await User.findOne({ email: email });
 
         if(userExists) {
-            res.status(422).json({ message: 'E-mail já cadastrado! Utilize outro.' });
+            res.status(409).json({ message: 'E-mail já cadastrado! Utilize outro.' });
             return;
         }
 
@@ -98,7 +98,7 @@ module.exports = class UserController {
         const user = await User.findOne({ email: email });
 
         if(!user) {
-            res.status(422).json({ message: 'Não há usuário cadastrado com este e-mail.' });
+            res.status(401).json({ message: 'Não há usuário cadastrado com este e-mail.' });
             return;
         }
 
@@ -106,7 +106,7 @@ module.exports = class UserController {
         const checkPassword = await bcrypt.compare(password, user.password);
 
         if(!checkPassword) {
-            res.status(422).json({ message: 'Senha inválida!' });
+            res.status(401).json({ message: 'Senha inválida!' });
             return;
         }
 
@@ -134,7 +134,7 @@ module.exports = class UserController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -153,7 +153,7 @@ module.exports = class UserController {
         
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -186,7 +186,7 @@ module.exports = class UserController {
         // Verifica se o e-mail já está em uso por outro usuário
         const userExists = await User.findOne({ email: email });
         if(user.email !== email && userExists) {
-            res.status(422).json({ message: 'Email inválido! Tente outro.' });
+            res.status(409).json({ message: 'Email inválido! Tente outro.' });
             return;
         }
         user.email = email;
@@ -213,7 +213,7 @@ module.exports = class UserController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(user._id.toString() !== decoded.id.toString()) {
-            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            res.status(403).json({ message: 'Acesso Negado. Não é possível processar sua solicitação.' });
             return;
         }
 
@@ -241,7 +241,7 @@ module.exports = class UserController {
         
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -257,7 +257,7 @@ module.exports = class UserController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(user._id.toString() !== decoded.id.toString()) {
-            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            res.status(403).json({ message: 'Acesso Negado. Não é possível processar sua solicitação.' });
             return;
         }
 

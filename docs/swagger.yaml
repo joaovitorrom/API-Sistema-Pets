@@ -1,0 +1,785 @@
+openapi: 3.0.0
+info:
+  title: API de Adoção de Pets
+  version: "1.0.0"
+  description: API RESTful para gerenciar adoções de pets, incluindo CRUD de Pets e Usuários.
+  contact:
+    email: joaoromani@unect.com.br
+servers:
+  - url: http://localhost:5000/
+    description: Servidor de Desenvolvimento
+
+components:
+  schemas:
+    # -------- PET SCHEMAS --------
+    Pet:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+          description: ID único do pet gerado pelo MongoDB.
+          readOnly: true
+        name:
+          type: string
+          description: Nome do pet.
+          example: "Rex"
+        age:
+          type: integer
+          description: Idade do pet em anos.
+          example: 2
+        weight:
+          type: number
+          format: float
+          description: Peso do pet em kg.
+          example: 10.5
+        color:
+          type: string
+          description: Cor predominante do pet.
+          example: "Caramelo"
+        available:
+          type: boolean
+          description: Indica se o pet está disponível para adoção.
+          default: true
+        user: # Quem cadastrou o pet
+          type: object
+          readOnly: true
+          properties:
+            _id:
+              type: string
+              format: objectid
+            name:
+              type: string
+            phone:
+              type: string
+        adopter: # Quem agendou visita/demonstrou interesse
+          type: object
+          nullable: true
+          readOnly: true
+          properties:
+            _id:
+              type: string
+              format: objectid
+            name:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: Data de criação do registro.
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Data da última atualização do registro.
+          readOnly: true
+
+    PetInput: # Para POST /pets
+      type: object
+      required:
+        - name
+        - age
+        - weight
+        - color
+      properties:
+        name:
+          type: string
+          description: Nome do pet.
+          example: "Bolinha"
+        age:
+          type: integer
+          description: Idade do pet em anos.
+          example: 1
+        weight:
+          type: number
+          format: float
+          description: Peso do pet em kg.
+          example: 3.2
+        color:
+          type: string
+          description: Cor predominante do pet.
+          example: "Branco"
+
+    PetUpdateInput: 
+      type: object
+      required: 
+        - name
+        - age
+        - weight
+        - color
+      properties:
+        name:
+          type: string
+          example: "Bolinha Editado"
+        age:
+          type: integer
+          example: 2
+        weight:
+          type: number
+          format: float
+          example: 3.5
+        color:
+          type: string
+          example: "Branco e Preto"
+        available:
+          type: boolean
+          description: Se o pet ainda está disponível.
+          example: true
+
+    # -------- USER SCHEMAS --------
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+          description: ID único do usuário gerado pelo MongoDB.
+          readOnly: true
+        name:
+          type: string
+          example: "João Silva"
+        email:
+          type: string
+          format: email
+          example: "joao.silva@example.com"
+        phone:
+          type: string
+          example: "(11) 98765-4321"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    UserRegisterInput:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+        - password
+        - confirmpassword
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+        confirmpassword:
+          type: string
+          format: password
+
+    UserLoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    UserUpdateInput:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+          description: Opcional. Envie apenas se desejar alterar a senha.
+        confirmpassword:
+          type: string
+          format: password
+          description: Opcional. Obrigatório se 'password' for enviado.
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        userId: 
+          type: string
+          format: objectid
+
+    # -------- GENERIC ERROR SCHEMAS --------
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Ocorreu um erro."
+        details: 
+          type: array
+          items:
+            type: object
+            properties:
+              campo:
+                type: string
+              mensagem:
+                type: string
+          example: [{ "campo": "name", "mensagem": "O nome é obrigatório!" }]
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security: # Segurança global 
+  - bearerAuth: []
+
+tags:
+  - name: Pets
+    description: Operações relacionadas a pets
+  - name: Usuários
+    description: Autenticação e gerenciamento de perfil de usuários
+  - name: Adoção
+    description: Processos de agendamento e conclusão de adoção
+
+paths:
+  # -------- PETS ENDPOINTS --------
+  /pets:
+    post:
+      tags:
+        - Pets
+      summary: Cadastra um novo pet
+      description: Adiciona um novo pet ao sistema para adoção. Requer autenticação.
+      operationId: createPet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetInput'
+      responses:
+        '201':
+          description: Pet cadastrado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  newPet:
+                    $ref: '#/components/schemas/Pet'
+        '422':
+          description: Erro de validação nos dados enviados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Não autorizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Pets
+      summary: Lista todos os pets
+      description: Retorna uma lista de todos os pets cadastrados no sistema, ordenados por data de criação (mais recentes primeiro). Não requer autenticação.
+      operationId: getAllPets
+      security: [] # Endpoint público
+      responses:
+        '200':
+          description: Lista de pets retornada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pet'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pets/my: 
+    get:
+      tags:
+        - Pets
+      summary: Lista os pets cadastrados pelo usuário logado
+      description: Retorna uma lista dos pets que o usuário autenticado cadastrou.
+      operationId: getAllUserPets
+      responses:
+        '200':
+          description: Lista de pets do usuário.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pet'
+        '401':
+          description: Não autorizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: ID do Pet a ser manipulado.
+        schema:
+          type: string
+          format: objectid
+    get:
+      tags:
+        - Pets
+      summary: Busca um pet pelo ID
+      description: Retorna detalhes de um pet específico. Não requer autenticação.
+      operationId: getPetById
+      security: [] # Endpoint público
+      responses:
+        '200':
+          description: Detalhes do pet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pet:
+                    $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Pets
+      summary: Atualiza um pet
+      description: Atualiza os dados de um pet existente. O usuário deve ser o dono do pet.
+      operationId: updatePet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetUpdateInput'
+      responses:
+        '200':
+          description: Pet atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/PetUpdateInput'
+        '401':
+          description: Não autorizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acesso negado (usuário não é o dono do pet).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pet não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Dados inválidos ou ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Pets
+      summary: Remove um pet
+      description: Remove um pet do sistema. O usuário deve ser o dono do pet.
+      operationId: removePetById
+      responses:
+        '200': 
+          description: Pet removido com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Pet removido com sucesso!"
+
+        '401':
+          description: Não autorizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acesso negado (usuário não é o dono do pet).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pet não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # -------- ADOÇÃO ENDPOINTS (SCHEDULE, CONCLUDE) --------
+  /pets/{id}/schedule: 
+    patch:
+      tags:
+        - Adoção
+      summary: Agenda uma visita para um pet
+      description: Permite que um usuário autenticado (que não seja o dono) agende uma visita para um pet disponível.
+      operationId: schedulePetVisit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do Pet para o qual agendar a visita.
+          schema:
+            type: string
+            format: objectid
+      responses:
+        '200':
+          description: Visita agendada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "A visita foi agendada com sucesso, entre em contato com [NomeDono] pelo telefone [TelefoneDono]"
+        '401':
+          description: Não autorizado.
+        '403': 
+          description: Acesso negado ou regra de negócio violada.
+        '404':
+          description: Pet não encontrado.
+        '409': 
+          description: Conflito (ex: já agendado, pet não disponível).
+        '422': 
+          description: ID inválido ou dados da requisição incorretos.
+        '500':
+          description: Erro interno do servidor.
+
+  /pets/{id}/conclude: 
+    patch:
+      tags:
+        - Adoção
+      summary: Conclui o processo de adoção de um pet
+      description: Marca um pet como não mais disponível. Somente o usuário que cadastrou o pet pode realizar esta ação.
+      operationId: concludePetAdoption
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do Pet cuja adoção será concluída.
+          schema:
+            type: string
+            format: objectid
+      responses:
+        '200':
+          description: Adoção concluída com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Parabéns! O ciclo de adoção foi finalizado com sucesso!"
+        '401':
+          description: Não autorizado.
+        '403': 
+          description: Acesso negado (usuário não é o dono do pet).
+        '404':
+          description: Pet não encontrado.
+        '422': 
+          description: ID inválido.
+        '500':
+          description: Erro interno do servidor.
+
+  # -------- USERS ENDPOINTS --------
+  /users/register:
+    post:
+      tags:
+        - Usuários
+      summary: Registra um novo usuário
+      description: Cria uma nova conta de usuário no sistema.
+      operationId: registerUser
+      security: [] # Endpoint público
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterInput'
+      responses:
+        '200': 
+          description: Usuário registrado e logado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409': 
+          description: Conflito (ex: e-mail já cadastrado).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Erro de validação nos dados enviados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags:
+        - Usuários
+      summary: Autentica um usuário
+      description: Realiza o login do usuário e retorna um token JWT.
+      operationId: loginUser
+      security: [] # Endpoint público
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginInput'
+      responses:
+        '200':
+          description: Login bem-sucedido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401': 
+          description: Autenticação falhou (e-mail/senha inválidos).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Dados de entrada inválidos (formato do e-mail, campos faltando).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/checkuser: 
+    get:
+      tags:
+        - Usuários
+      summary: Verifica o usuário logado
+      description: Retorna os dados do usuário atualmente autenticado com base no token JWT.
+      operationId: checkCurrentUser
+      responses:
+        '200':
+          description: Dados do usuário autenticado (ou null se não houver token válido).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User' 
+                nullable: true
+        '401': 
+          description: Não autorizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno do servidor.
+
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: ID do Usuário.
+        schema:
+          type: string
+          format: objectid
+    get:
+      tags:
+        - Usuários
+      summary: Busca um usuário pelo ID
+      description: Retorna dados públicos de um usuário específico. Não requer autenticação.
+      operationId: getUserById
+      security: [] # Endpoint público
+      responses:
+        '200':
+          description: Dados do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User' 
+        '404':
+          description: Usuário não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Usuários
+      summary: Atualiza o perfil do usuário
+      description: Permite que o usuário autenticado atualize seus próprios dados.
+      operationId: editUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+      responses:
+        '200':
+          description: Usuário atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/User' 
+        '401':
+          description: Não autorizado.
+        '403': 
+          description: Acesso negado.
+        '404':
+          description: Usuário não encontrado para edição.
+        '409': 
+          description: Conflito (ex: e-mail já em uso por outro usuário).
+        '422':
+          description: Dados inválidos ou ID inválido.
+        '500':
+          description: Erro interno do servidor.
+    
+    delete:
+      tags:
+        - Usuários
+      summary: Deleta a conta do usuário
+      description: Permite que o usuário autenticado delete sua própria conta e todos os pets associados.
+      operationId: deleteUser
+      responses:
+        '200': 
+          description: Usuário removido com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Usuário removido com sucesso."
+        '401':
+          description: Não autorizado.
+        '403': 
+          description: Acesso negado.
+        '404':
+          description: Usuário não encontrado para deleção.
+        '422':
+          description: ID inválido.
+        '500':
+          description: Erro interno do servidor.

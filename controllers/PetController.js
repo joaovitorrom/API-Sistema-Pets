@@ -83,7 +83,7 @@ module.exports = class PetController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -102,7 +102,7 @@ module.exports = class PetController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -118,7 +118,7 @@ module.exports = class PetController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(pet.user._id.toString() !== decoded.id.toString()) {
-            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            res.status(403).json({ message: 'Acesso Negado. Não é possível processar sua solicitação.' });
             return;
         }
 
@@ -132,7 +132,7 @@ module.exports = class PetController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -152,7 +152,7 @@ module.exports = class PetController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(pet.user._id.toString() !== decoded.id.toString()) {
-            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            res.status(403).json({ message: 'Acesso Negado. Não é possível processar sua solicitação.' });
             return;
         }
 
@@ -195,7 +195,7 @@ module.exports = class PetController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -211,21 +211,21 @@ module.exports = class PetController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(pet.user._id.toString() === decoded.id.toString()) {
-            res.status(422).json({ message: 'Você não pode agendar uma visita com o seu próprio Pet!' });
+            res.status(409).json({ message: 'Você não pode agendar uma visita com o seu próprio Pet!' });
             return;
         }
 
         // Verifica se o usuário já agendou uma visita
         if(pet.adopter) {
             if(pet.adopter._id === decoded.id && pet.available === true) {
-                res.status(422).json({ message: 'Você já agendou uma visita para este Pet!' });
+                res.status(409).json({ message: 'Você já agendou uma visita para este Pet!' });
                 return;
             }
         }
 
         // Verifica se o pet está disponível para adoção
         if(pet.available === false){
-            res.status(422).json({ message: 'Esse Pet não está disponível para adoção no momento.' });
+            res.status(409).json({ message: 'Esse Pet não está disponível para adoção no momento.' });
             return;
         }
 
@@ -245,7 +245,7 @@ module.exports = class PetController {
 
         // Verifica se o id é válido
         if(!ObjectId.isValid(id)) {
-            res.status(422).json({ message: 'ID Inválido!' });
+            res.status(400).json({ message: 'ID Inválido!' });
             return;
         }
 
@@ -261,7 +261,7 @@ module.exports = class PetController {
         const decoded = jwt.verify(token, process.env.SECRET);
 
         if(pet.user._id.toString() !== decoded.id.toString()) {
-            res.status(422).json({ message: 'Não é possível processar sua solicitação.' });
+            res.status(403).json({ message: 'Acesso Negado. Não é possível processar sua solicitação.' });
             return;
         }
 
