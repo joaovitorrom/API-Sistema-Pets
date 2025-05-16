@@ -9,17 +9,17 @@ Esta API RESTful foi desenvolvida como projeto final da minha capacitação trai
 ## 🛠️ Estrutura do Projeto
 
 O projeto visou seguir o Padrão MVC e está organizado da seguinte forma:
-.
- ├── config/ # Configurações (ex: conexão com o banco de dados)
- ├── controllers/ # Lógica de negócio e manipulação de requisições
- ├── docs/ # Arquivos de documentação (swagger.yaml)
- ├── helpers/ # Funções utilitárias (ex: criação de token, verificação)
- ├── models/ # Schemas do Mongoose para o banco de dados
- ├── routes/ # Definição das rotas da API
- ├── .env.example # Exemplo de arquivo de variáveis de ambiente
- ├── app.js # Ponto de entrada principal da aplicação Express
- ├── package.json # Metadados do projeto e dependências
- └── README.md # Este arquivo
+
+- ├── config/ # Configurações (ex: conexão com o banco de dados
+- ├── controllers/ # Lógica de negócio e manipulação de requisições
+- ├── docs/ # Arquivos de documentação (swagger.yaml)
+- ├── helpers/ # Funções utilitárias (ex: criação de token, verificação)
+- ├── models/ # Schemas do Mongoose para o banco de dados
+- ├── routes/ # Definição das rotas da API
+- ├── .env.example # Exemplo de arquivo de variáveis de ambiente
+- ├── app.js # Ponto de entrada principal da aplicação Express
+- ├── package.json # Metadados do projeto e dependências
+- └── README.md # Este arquivo
 
 ## ⚙️ Pré-requisitos
 
