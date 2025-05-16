@@ -1,5 +1,4 @@
 const Pet = require('../models/Pet');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // Helpers
@@ -46,7 +45,8 @@ module.exports = class PetController {
         });
 
         try {
-            const newPet = await pet.save()
+            const newPet = await pet.save();
+
             res.status(201).json({
                 message: 'Pet cadastado com sucesso!',
                 newPet
@@ -54,6 +54,7 @@ module.exports = class PetController {
             
         } catch (error) {
             console.log(error);
+
             res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
             return;
         }
@@ -122,6 +123,7 @@ module.exports = class PetController {
         }
 
         await Pet.findByIdAndRemove(id);
+
         res.status(200).json({ message: 'Pet removido com sucesso!' });
     }
 
@@ -179,8 +181,9 @@ module.exports = class PetController {
         }
 
         updatedData.available = available;
-        
+
         await Pet.findByIdAndUpdate(id, updatedData);
+
         res.status(200).json({
             message: 'Pet atualizado com sucesso!',
             data: updatedData
@@ -233,6 +236,7 @@ module.exports = class PetController {
         }
 
         await Pet.findByIdAndUpdate(id, pet);
+        
         res.status(200).json({ message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}` });
     }
 
@@ -264,6 +268,7 @@ module.exports = class PetController {
         pet.available = false;
 
         await Pet.findByIdAndUpdate(id, pet);
+        
         res.status(200).json({
             message: 'Parabéns! O ciclo de adoção foi finalizado com sucesso!'
         })

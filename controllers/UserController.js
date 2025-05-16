@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Pet = require('../models/Pet');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -69,6 +70,7 @@ module.exports = class UserController {
             await createUserToken(newUser, req, res);
         } catch (error) {
             console.log(error);
+
             res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
             return;
         }
@@ -228,6 +230,7 @@ module.exports = class UserController {
             })
         } catch (error) {
             console.log(error);
+
             res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
             return;
         }
@@ -259,11 +262,15 @@ module.exports = class UserController {
         }
 
         try {
+            // Remoção do usuário e todos pets vinculados a ele
+            await Pet.deleteMany({ 'user._id': decoded.id });
             await User.deleteOne({ _id: id });
-            res.status(200).json({ message: "Usuário removido com sucesso."});
+
+            res.status(200).json({ message: 'Usuário removido com sucesso.' });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: "Aconteceu um erro no servidor, tente novamente mais tarde." });
+            
+            res.status(500).json({ message: 'Aconteceu um erro no servidor, tente novamente mais tarde.' });
             return;
         }
     }
